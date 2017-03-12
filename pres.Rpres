@@ -1,0 +1,48 @@
+San Francisco Mental Health Incidents Monitoring 
+========================================================
+author: Julien Massardier
+date: 03/12/2017
+autosize: true
+
+Overview of the Data
+========================================================
+
+- The data was extracted from the SFOpenData dataset about police interventions in the city of San Francisco. We selected only non criminal incidents where the description of the incident was "Aided Case Mental Disturbed".
+- We excluded 2017 data since either the classification or the measurement seems to have changed.
+- It appears that the number of individuals suffering mental episodes is increasing, but not all the neighborhoods are equally impacted.
+
+Data manipulation
+========================================================
+
+```{r}
+library(data.table);library(ggplot2)
+crimes <- fread("C:/Users/julienma/Google Drive/Study/pack1/empty/firstapppsychicidentssf/crime_ment.csv")
+
+crimes[,lat:=as.numeric(substr(Location,start = 2,17))]
+crimes[,lng:=as.numeric(substr(Location,start = 20,36))]
+
+c2 <- crimes[,.(lat,lng,Date,PdDistrict,Resolution)]
+c3<- c2[complete.cases(c2)]
+c3[,date:=as.Date(Date,"%m/%d/%Y %H:%M:%S")][,year:=year(date)]
+c4<-c3[,.(number_of_cases=.N),by=.(year,PdDistrict)]
+
+```
+
+Yearly evolution of the number of incidents per district
+========================================================
+
+- A quick visualization shows how the southern part of the city, Mission and SoMa, suffered a massive increase of such incidents.  
+```{r, echo=FALSE,fig.width=7,fig.height=4,dpi=300,out.width="768px",out.height="432px"}
+ggplot(c4[year<2017],aes(year,number_of_cases,col=PdDistrict,group=PdDistrict))+geom_line()
+```
+
+The app
+========================================================
+
+The app allows to see how the situation changed in each area of the city thanks to two elements:  
+1. an interactive map  
+2. a chart comparing districts  
+
+Here is how to access the app:  
+- [Link to the app](https://massardier.shinyapps.io/firstapppsychicidentssf/)  
+- [Link to the Github repository](https://github.com/massardier/subweek4)
